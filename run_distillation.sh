@@ -9,6 +9,10 @@
 # ○ --output_file: Path to save the final train.jsonl
 
 # this might not be a part of final pipeline
-python -m dataset_generation --teacher_model will_tell \
-    --num_samples will_tell \
-    --output_file will_tell
+python dataset_generation.py \
+    --teacher_model Qwen/Qwen2.5-7B-Instruct \
+    --num_samples 3500,2500,2000,1000,1000 \
+    --output_file outputs/train.jsonl \
+    --max_new_tokens 1024 \
+    --gpu_memory_utilization 0.85 \
+    --tensor_parallel_size 1
