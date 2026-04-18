@@ -23,8 +23,6 @@ REASONING_BLOCK_RE = re.compile(
     re.IGNORECASE | re.DOTALL,
 )
 
-WRONG_SAMPLE_FRACTION = 0.15
-
 LANGUAGE_INSTRUCTIONS = {
     "english": "Respond in English.",
     "hindi":   "अपना उत्तर हिंदी में दें।",
@@ -33,6 +31,15 @@ LANGUAGE_INSTRUCTIONS = {
     "tamil":   "Reason step by step in English but present your final answer line in Tamil.",
 }
 
+LANGUAGE_CODES = ["en", "hindi", "bengali", "kannada", "tamil"]
+
+WRONG_FRACTIONS = {
+    "en":      0.10,
+    "hindi":   0.15,
+    "bengali": 0.20,
+    "kannada": 0.40,
+    "tamil":   0.40,
+}
 
 def setup_logger(level: str) -> None:
     numeric_level = getattr(logging, level.upper(), logging.INFO)
@@ -185,9 +192,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     parser.add_argument("--max_new_tokens", type=int, default=1024,
                         help="Max tokens to generate per sample")
-    parser.add_argument("--wrong_sample_fraction", type=float,
-                        default=WRONG_SAMPLE_FRACTION,
-                        help="Fraction of incorrect teacher responses to keep for padding")
     parser.add_argument("--gpu_memory_utilization", type=float, default=0.85,
                         help="Target fraction of GPU memory for vLLM")
     parser.add_argument("--tensor_parallel_size", type=int, default=1,
@@ -269,10 +273,18 @@ def main() -> None:
     )
 
     random.seed(args.seed)
-    n_wrong_to_keep = int(len(incorrect) * args.wrong_sample_fraction)
-    kept_incorrect = random.sample(incorrect, min(n_wrong_to_keep, len(incorrect)))
-    LOGGER.info("Keeping %d incorrect samples (fraction=%.2f)",
-                len(kept_incorrect), args.wrong_sample_fraction)
+
+    # now sample incorrect samples as per language
+    kept_incorrect = []
+    for ln_code in LANGUAGE_CODES:
+        
+        incorrect_for_curr_language = [sample for sample in incorrect if sample["language"] == ln_code]
+        n_wrong_to_keep = int(len(incorrect_for_curr_language) * WRONG_FRACTIONS[ln_code])
+        kept_incorrect_lang = random.sample(incorrect_for_curr_language, min(n_wrong_to_keep, len(incorrect_for_curr_language)))
+        kept_incorrect.extend(kept_incorrect_lang)
+
+    LOGGER.info("Keeping %d incorrect samples total (language-specific fractions applied)",
+            len(kept_incorrect))
 
     final_records = correct + kept_incorrect
     random.shuffle(final_records)
