@@ -1,3 +1,4 @@
+# Part A: Distillation Data Creation (Teacher Prompting)
 from __future__ import annotations
 
 import argparse
@@ -147,13 +148,15 @@ def main() -> None:
     output_path = Path(args.output_file)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
+    # Subpart 1. Sampling : sample atmost 10K samples for training
     sampled = sample_datasets(
         samples_per_language=samples_per_language,
         split=args.split,
         seed=args.seed,
     )
     LOGGER.info("Collected %d samples", len(sampled))
-
+    
+    # Subpart 2.1 : Load model
     teacher, tokenizer = load_vllm_llm(
         model_id=args.teacher_model,
         tensor_parallel_size=args.tensor_parallel_size,
@@ -163,11 +166,14 @@ def main() -> None:
     written = 0
     with output_path.open("w", encoding="utf-8") as fp:
         for row in sampled:
+            # Subpart 2.2 : Generation : prompt the teacher model to solve them 
+            # Remember token length should be atmost 2048
             question_with_choices = _build_instruction(row)
             prompt = format_teacher_prompt(
                 question_with_choices, row["language"])
             parsed = generate_and_parse(teacher, tokenizer, prompt)
 
+            # Subpart 3 : Formatting
             record = {
                 "question": question_with_choices,
                 "reasoning": parsed["reasoning"],
