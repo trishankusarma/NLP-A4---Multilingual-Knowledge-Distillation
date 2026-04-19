@@ -1,0 +1,2 @@
+2026-04-19 06:07:52,745 | INFO | Logging to logs/output_llama.txt
+2026-04-19 06:07:52,746 | INFO | Loading student tokenizer from meta-llama/Llama-3.2-1B-Instruct

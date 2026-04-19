@@ -1,0 +1,60 @@
+2026-04-19 17:21:01,745 | INFO | Logging to logs/output_llama_distill.txt
+2026-04-19 17:21:01,746 | INFO | Loading student tokenizer from /scratch/scai/phd/aiz248311/col772/a4/models/Llama-3.2-1B-Instruct
+2026-04-19 17:21:03,222 | INFO | Set pad_token = eos_token (<|eot_id|>)
+2026-04-19 17:21:03,330 | INFO | Loaded rows per language (before split):
+2026-04-19 17:21:03,331 | INFO |   bengali    : 748 rows
+2026-04-19 17:21:03,331 | INFO |   en         : 2079 rows
+2026-04-19 17:21:03,331 | INFO |   hindi      : 1002 rows
+2026-04-19 17:21:03,331 | INFO |   kannada    : 300 rows
+2026-04-19 17:21:03,331 | INFO |   tamil      : 315 rows
+2026-04-19 17:21:03,331 | INFO |   tamil      : 284 train | 31 val
+2026-04-19 17:21:03,394 | INFO |   hindi      : 902 train | 100 val
+2026-04-19 17:21:03,442 | INFO |   en         : 1872 train | 207 val
+2026-04-19 17:21:03,540 | INFO |   bengali    : 674 train | 74 val
+2026-04-19 17:21:03,575 | INFO |   kannada    : 270 train | 30 val
+2026-04-19 17:21:03,590 | INFO | Final: 4002 train | 442 val records
+2026-04-19 17:21:03,593 | INFO | Loading student model from /scratch/scai/phd/aiz248311/col772/a4/models/Llama-3.2-1B-Instruct
+2026-04-19 17:21:14,778 | INFO | Training: 10 epochs | 5000 steps | warmup 250
+2026-04-19 17:28:28,850 | INFO | Epoch 1 | train loss: 0.8202
+2026-04-19 17:28:45,563 | INFO | Epoch 1 | val loss:   0.7863
+2026-04-19 17:28:45,564 | INFO | Epoch 1 | running val accuracy...
+2026-04-19 17:44:20,697 | INFO |   Val acc bengali    : 22.0% (11/50)
+2026-04-19 17:44:20,698 | INFO |   Val acc en         : 22.0% (11/50)
+2026-04-19 17:44:20,698 | INFO |   Val acc hindi      : 28.0% (14/50)
+2026-04-19 17:44:20,698 | INFO |   Val acc kannada    : 3.3% (1/30)
+2026-04-19 17:44:20,698 | INFO |   Val acc tamil      : 19.4% (6/31)
+2026-04-19 17:44:20,698 | INFO |   Val acc overall    : 20.4%
+2026-04-19 17:44:21,267 | INFO | Epoch 1 | saved best checkpoint (val_loss=0.7863)
+2026-04-19 17:51:24,546 | INFO | Epoch 2 | train loss: 0.6696
+2026-04-19 17:51:41,238 | INFO | Epoch 2 | val loss:   0.7814
+2026-04-19 17:51:41,238 | INFO | Epoch 2 | running val accuracy...
+2026-04-19 18:05:48,885 | INFO |   Val acc bengali    : 14.0% (7/50)
+2026-04-19 18:05:48,886 | INFO |   Val acc en         : 28.0% (14/50)
+2026-04-19 18:05:48,886 | INFO |   Val acc hindi      : 36.0% (18/50)
+2026-04-19 18:05:48,886 | INFO |   Val acc kannada    : 6.7% (2/30)
+2026-04-19 18:05:48,886 | INFO |   Val acc tamil      : 16.1% (5/31)
+2026-04-19 18:05:48,886 | INFO |   Val acc overall    : 21.8%
+2026-04-19 18:05:49,475 | INFO | Epoch 2 | saved best checkpoint (val_loss=0.7814)
+2026-04-19 18:12:49,655 | INFO | Epoch 3 | train loss: 0.5022
+2026-04-19 18:13:06,392 | INFO | Epoch 3 | val loss:   0.8210
+2026-04-19 18:13:06,392 | INFO | Epoch 3 | running val accuracy...
+2026-04-19 18:28:25,032 | INFO |   Val acc bengali    : 18.0% (9/50)
+2026-04-19 18:28:25,033 | INFO |   Val acc en         : 26.0% (13/50)
+2026-04-19 18:28:25,033 | INFO |   Val acc hindi      : 24.0% (12/50)
+2026-04-19 18:28:25,033 | INFO |   Val acc kannada    : 3.3% (1/30)
+2026-04-19 18:28:25,033 | INFO |   Val acc tamil      : 22.6% (7/31)
+2026-04-19 18:28:25,033 | INFO |   Val acc overall    : 19.9%
+2026-04-19 18:28:25,034 | INFO | Epoch 3 | no improvement for 1/2 epochs
+2026-04-19 18:35:37,296 | INFO | Epoch 4 | train loss: 0.3456
+2026-04-19 18:35:53,983 | INFO | Epoch 4 | val loss:   0.9115
+2026-04-19 18:35:53,983 | INFO | Epoch 4 | running val accuracy...
+2026-04-19 18:51:20,149 | INFO |   Val acc bengali    : 16.0% (8/50)
+2026-04-19 18:51:20,150 | INFO |   Val acc en         : 24.0% (12/50)
+2026-04-19 18:51:20,150 | INFO |   Val acc hindi      : 38.0% (19/50)
+2026-04-19 18:51:20,150 | INFO |   Val acc kannada    : 3.3% (1/30)
+2026-04-19 18:51:20,150 | INFO |   Val acc tamil      : 19.4% (6/31)
+2026-04-19 18:51:20,150 | INFO |   Val acc overall    : 21.8%
+2026-04-19 18:51:20,151 | INFO | Epoch 4 | no improvement for 2/2 epochs
+2026-04-19 18:51:20,151 | INFO | Early stopping triggered after epoch 4.
+2026-04-19 18:51:21,669 | INFO | Saved final checkpoint to outputs/llama_distilled/final
+2026-04-19 18:51:21,671 | INFO | Best val loss: 0.7814

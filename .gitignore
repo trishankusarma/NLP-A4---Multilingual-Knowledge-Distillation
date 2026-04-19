@@ -1,7 +1,7 @@
 __pycache__
 .env
 .vscode
-outputs/distilled**
+outputs/**
 __pycache__/
 */__pycache__/
 */**/__pycache__/
