@@ -250,7 +250,8 @@ def main() -> None:
     teacher, tokenizer = load_vllm_llm(
         model_id=args.teacher_model,
         tensor_parallel_size=args.tensor_parallel_size,
-        gpu_memory_utilization=gpu_util,   # using auto-detected value     
+        gpu_memory_utilization=gpu_util,
+        max_model_len=8192, 
     )
 
     # 3. Generate in batches

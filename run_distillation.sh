@@ -11,6 +11,13 @@
 # this might not be a part of final pipeline
 #!/bin/bash
 
+#!/bin/bash
+fuser -k /dev/nvidia0 2>/dev/null || true
+sleep 3
+
+export CUDA_VISIBLE_DEVICES=0
+export VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=1
+
 python dataset_generation.py \
     --teacher_model Qwen/Qwen2.5-7B-Instruct \
     --num_samples 3500,2500,2000,1000,1000 \
@@ -18,7 +25,7 @@ python dataset_generation.py \
     --max_new_tokens 512 \
     --gpu_memory_utilization 0.85 \
     --tensor_parallel_size 1 \
-    --batch_size 256
+    --batch_size 10000
 
 # In-family student (Qwen)
 # python train_distill.py \
