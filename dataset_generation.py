@@ -8,7 +8,7 @@ import re
 from collections import Counter
 from pathlib import Path
 from typing import Any
-import torch
+import subprocess
 
 from datasets import Dataset, concatenate_datasets
 
@@ -43,23 +43,25 @@ WRONG_FRACTIONS = {
 }
 
 def get_gpu_config(requested_util: float):
-    """Auto-adjust settings based on available GPU."""
-    if not torch.cuda.is_available():
-        return requested_util, "auto", 64
-    
-    props = torch.cuda.get_device_properties(0)
-    vram_gb = props.total_memory / 1e9
-    name = props.name.lower()
-    
-    if "v100" in name or vram_gb < 20:
-        # 16GB V100 — be conservative
-        return min(requested_util, 0.80), "float16", 32
-    elif vram_gb < 40:
-        # 32GB V100 or similar
+    try:
+        result = subprocess.run(
+            ["nvidia-smi", "--query-gpu=name,memory.total",
+             "--format=csv,noheader,nounits"],
+            capture_output=True, text=True, timeout=10
+        )
+        line = result.stdout.strip().split("\n")[0]
+        name, vram_mb = line.split(",")
+        name = name.strip().lower()
+        vram_gb = float(vram_mb.strip()) / 1024
+
+        if "v100" in name or vram_gb < 20:
+            return min(requested_util, 0.80), "float16", 32
+        elif vram_gb < 40:
+            return min(requested_util, 0.85), "float16", 64
+        else:
+            return requested_util, "bfloat16", 256
+    except Exception:
         return min(requested_util, 0.85), "float16", 64
-    else:
-        # A100/H100 — your current setup
-        return requested_util, "bfloat16", 256
 
 def setup_logger(level: str) -> None:
     numeric_level = getattr(logging, level.upper(), logging.INFO)
@@ -155,7 +157,6 @@ def generate_and_parse(
         prompts,
         max_new_tokens=max_new_tokens,
         temperature=0.0,
-        repetition_penalty=1.0,
         use_tqdm=True,
     )
 
@@ -218,6 +219,8 @@ def parse_args() -> argparse.Namespace:
                         help="vLLM tensor parallel size")
     parser.add_argument("--log_level", default="INFO",
                         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
+    parser.add_argument("--batch_size", type=int, default=2000,
+                    help="Prompts per vLLM batch")
     return parser.parse_args()
 
 
@@ -247,23 +250,28 @@ def main() -> None:
     teacher, tokenizer = load_vllm_llm(
         model_id=args.teacher_model,
         tensor_parallel_size=args.tensor_parallel_size,
-        gpu_memory_utilization=gpu_util,   # using auto-detected value
-        dtype=dtype,                       
-        max_num_seqs=max_num_seqs,        
+        gpu_memory_utilization=gpu_util,   # using auto-detected value     
     )
 
-    # 3. Build all prompts and submit in ONE vLLM call
-    all_instructions = [_build_instruction(r) for r in rows]
-    all_prompts = [
-        format_teacher_prompt(inst, r["language"])
-        for inst, r in zip(all_instructions, rows)
-    ]
+    # 3. Generate in batches
+    batch_size = args.batch_size
+    all_instructions = []
+    all_parsed = []
 
-    LOGGER.info("Submitting all %d prompts to vLLM in one shot...", len(all_prompts))
-    all_parsed = generate_and_parse(
-        teacher, tokenizer, all_prompts,
-        max_new_tokens=args.max_new_tokens,
-    )
+    for i in range(0, len(rows), batch_size):
+        batch_rows = rows[i: i + batch_size]
+        batch_instructions = [_build_instruction(r) for r in batch_rows]
+        batch_prompts = [
+            format_teacher_prompt(inst, r["language"])
+            for inst, r in zip(batch_instructions, batch_rows)
+        ]
+        
+        LOGGER.info("Processing batch %d-%d / %d", i, min(i + batch_size, len(rows)), len(rows))
+        parsed = generate_and_parse(teacher, tokenizer, batch_prompts, args.max_new_tokens)
+        
+        all_instructions.extend(batch_instructions)
+        all_parsed.extend(parsed)
+
     LOGGER.info("Generation complete.")
 
     # 4. Build records
