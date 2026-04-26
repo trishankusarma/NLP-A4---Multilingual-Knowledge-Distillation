@@ -37,6 +37,9 @@ def load_vllm_llm(model_id, tensor_parallel_size: int = 1, **kwargs):
         model=model_id,
         tensor_parallel_size=tensor_parallel_size,
         trust_remote_code=True,
+        disable_log_stats=True,
+        dtype=kwargs.pop("dtype", "float16"),
+        max_num_seqs=kwargs.pop("max_num_seqs", 256),
         **kwargs,
     )
     tokenizer = llm.get_tokenizer()
@@ -53,7 +56,18 @@ def prompt_vllm(
     repetition_penalty: float = 1.1,
     use_tqdm: bool = True,
 ):
-    prompts = [build_vllm_prompt(tokenizer, messages) for messages in batch_messages]
+    messages_list = list(batch_messages)
+    
+    if hasattr(tokenizer, 'apply_chat_template'):
+        prompts = [
+            tokenizer.apply_chat_template(
+                m, tokenize=False, add_generation_prompt=True
+            )
+            for m in messages_list
+        ]
+    else:
+        prompts = [build_vllm_prompt(tokenizer, m) for m in messages_list]
+
     sampling_params = SamplingParams(
         temperature=temperature,
         top_p=top_p,

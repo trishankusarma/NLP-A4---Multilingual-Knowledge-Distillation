@@ -8,6 +8,7 @@ import re
 from collections import Counter
 from pathlib import Path
 from typing import Any
+import torch
 
 from datasets import Dataset, concatenate_datasets
 
@@ -24,22 +25,41 @@ REASONING_BLOCK_RE = re.compile(
 )
 
 LANGUAGE_INSTRUCTIONS = {
-    "english": "Respond in English.",
-    "hindi":   "अपना उत्तर हिंदी में दें।",
-    "bengali": "আপনার উত্তর বাংলায় দিন।",
-    "kannada": "Reason step by step in English but present your final answer line in Kannada.",
-    "tamil":   "Reason step by step in English but present your final answer line in Tamil.",
+    "english": "Reason step by step in English and respond",
+    "hindi":   "Reason step by step in English and respond",
+    "bengali": "Reason step by step in English and respond",
+    "kannada": "Reason step by step in English and respond",
+    "tamil":   "Reason step by step in English and respond",
 }
 
 LANGUAGE_CODES = ["en", "hindi", "bengali", "kannada", "tamil"]
 
 WRONG_FRACTIONS = {
-    "en":      0.10,
-    "hindi":   0.15,
-    "bengali": 0.20,
-    "kannada": 0.40,
-    "tamil":   0.40,
+    "en":      1.0,
+    "hindi":   1.0,
+    "bengali": 1.0,
+    "kannada": 1.0,
+    "tamil":   1.0,
 }
+
+def get_gpu_config(requested_util: float):
+    """Auto-adjust settings based on available GPU."""
+    if not torch.cuda.is_available():
+        return requested_util, "auto", 64
+    
+    props = torch.cuda.get_device_properties(0)
+    vram_gb = props.total_memory / 1e9
+    name = props.name.lower()
+    
+    if "v100" in name or vram_gb < 20:
+        # 16GB V100 — be conservative
+        return min(requested_util, 0.80), "float16", 32
+    elif vram_gb < 40:
+        # 32GB V100 or similar
+        return min(requested_util, 0.85), "float16", 64
+    else:
+        # A100/H100 — your current setup
+        return requested_util, "bfloat16", 256
 
 def setup_logger(level: str) -> None:
     numeric_level = getattr(logging, level.upper(), logging.INFO)
@@ -135,7 +155,7 @@ def generate_and_parse(
         prompts,
         max_new_tokens=max_new_tokens,
         temperature=0.0,
-        repetition_penalty=1.2,
+        repetition_penalty=1.0,
         use_tqdm=True,
     )
 
@@ -205,6 +225,11 @@ def main() -> None:
     args = parse_args()
     setup_logger(args.log_level)
 
+    # Auto-detect GPU and adjust settings
+    gpu_util, dtype, max_num_seqs = get_gpu_config(args.gpu_memory_utilization)
+    LOGGER.info("GPU config: util=%.2f, dtype=%s, max_num_seqs=%d", 
+                gpu_util, dtype, max_num_seqs)
+
     samples_per_language = _parse_num_samples(args.num_samples)
     output_path = Path(args.output_file)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -222,7 +247,9 @@ def main() -> None:
     teacher, tokenizer = load_vllm_llm(
         model_id=args.teacher_model,
         tensor_parallel_size=args.tensor_parallel_size,
-        gpu_memory_utilization=args.gpu_memory_utilization,
+        gpu_memory_utilization=gpu_util,   # using auto-detected value
+        dtype=dtype,                       
+        max_num_seqs=max_num_seqs,        
     )
 
     # 3. Build all prompts and submit in ONE vLLM call
