@@ -14,16 +14,18 @@ from torch.utils.data import Dataset
 LOGGER = logging.getLogger(__name__)
 
 LANGUAGE_INSTRUCTIONS = {
-    "en":      "Respond in English.",
-    "hindi":   "अपना उत्तर हिंदी में दें।",
-    "bengali": "আপনার উত্তর বাংলায় দিন।",
-    "kannada": "Reason step by step in English but present your final answer line in Kannada.",
-    "tamil":   "Reason step by step in English but present your final answer line in Tamil.",
+    "english": "Reason step by step in English and respond",
+    "hindi":   "Reason step by step in English and respond",
+    "bengali": "Reason step by step in English and respond",
+    "kannada": "Reason step by step in English and respond",
+    "tamil":   "Reason step by step in English and respond",
 }
 
 CORRECT_WEIGHT   = 1.0
 INCORRECT_WEIGHT = 0.5
 
+INCORRECT_FRACTION_RATIO = 0.0
+VAL_FRACTION = 0.05
 
 @dataclass
 class DistillRecord:
@@ -65,66 +67,76 @@ def build_prompt(question: str, language: str, tokenizer) -> str:
         )
     return f"System: {system_content}\nUser: {question}\nAssistant:"
 
+def load_and_split(jsonl_path, tokenizer, val_fraction=VAL_FRACTION, seed=42):
+    import json, random
+    from collections import defaultdict
 
-def load_and_split(
-    train_data: str,
-    tokenizer,
-    val_fraction: float = 0.1,
-    seed: int = 42,
-) -> tuple[list[DistillRecord], list[DistillRecord]]:
-    """Load JSONL and do a language-stratified train/val split."""
-    lang_buckets: dict[str, list[dict]] = defaultdict(list)
-    skipped = 0
-
-    with open(train_data, "r", encoding="utf-8") as fp:
-        for line in fp:
+    all_raw = []
+    with open(jsonl_path, encoding="utf-8") as f:
+        for line in f:
             line = line.strip()
-            if not line:
-                continue
-            row = json.loads(line)
-            if not row.get("teacher_generation", "").strip():
-                skipped += 1
-                continue
-            lang = _canonical_language(row.get("language", "en"))
-            lang_buckets[lang].append(row)
+            if line:
+                all_raw.append(json.loads(line))
 
-    LOGGER.info("Loaded rows per language (before split):")
-    for lang, rows in sorted(lang_buckets.items()):
-        LOGGER.info("  %-10s : %d rows", lang, len(rows))
-    if skipped:
-        LOGGER.info("Skipped %d rows with empty teacher_generation", skipped)
+    correct   = [r for r in all_raw if r.get("correct", False)]
+    incorrect = [r for r in all_raw if not r.get("correct", False)]
 
-    rng = random.Random(seed)
-    train_records: list[DistillRecord] = []
-    val_records:   list[DistillRecord] = []
+    LOGGER.info("Loaded: %d correct, %d incorrect", len(correct), len(incorrect))
 
-    for lang, rows in lang_buckets.items():
-        rng.shuffle(rows)
-        n_val      = max(1, int(len(rows) * val_fraction))
-        val_rows   = rows[:n_val]
-        train_rows = rows[n_val:]
-        LOGGER.info("  %-10s : %d train | %d val", lang, len(train_rows), len(val_rows))
+    # 15% incorrect per language
+    by_lang_incorrect = defaultdict(list)
+    for r in incorrect:
+        lang = _canonical_language(r.get("language", "en"))
+        by_lang_incorrect[lang].append(r)
 
-        for split_rows, record_list in [(train_rows, train_records), (val_rows, val_records)]:
-            for row in split_rows:
-                prompt = build_prompt(
-                    question=row["question"],
-                    language=lang,
-                    tokenizer=tokenizer,
-                )
-                weight = CORRECT_WEIGHT if row.get("correct", True) else INCORRECT_WEIGHT
-                gold   = str(row.get("gold_answer", "")).upper()[:1]
-                record_list.append(DistillRecord(
-                    prompt=prompt,
-                    generation=row["teacher_generation"].strip(),
-                    weight=weight,
-                    gold_answer=gold,
-                    language=lang,
-                ))
+    random.seed(seed)
+    kept_incorrect = []
+    for lang, rows in by_lang_incorrect.items():
+        n_keep = max(1, int(len(rows) * INCORRECT_FRACTION_RATIO))
+        random.shuffle(rows)
+        kept_incorrect.extend(rows[:n_keep])
 
-    LOGGER.info("Final: %d train | %d val records", len(train_records), len(val_records))
+    final_raw = correct + kept_incorrect
+    random.shuffle(final_raw)
+
+    LOGGER.info(
+        "Final: %d correct + %d incorrect (0%%) = %d total",
+        len(correct), len(kept_incorrect), len(final_raw)
+    )
+
+    # Log per-language breakdown
+    by_lang = defaultdict(lambda: {"correct": 0, "incorrect": 0})
+    for r in final_raw:
+        lang = _canonical_language(r.get("language", "en"))
+        key = "correct" if r.get("correct", False) else "incorrect"
+        by_lang[lang][key] += 1
+    for lang, counts in sorted(by_lang.items()):
+        LOGGER.info("  %-10s : %d correct + %d incorrect",
+                    lang, counts["correct"], counts["incorrect"])
+
+    # Convert to DistillRecord — build prompt here
+    def to_record(r: dict) -> DistillRecord:
+        lang     = _canonical_language(r.get("language", "en"))
+        prompt   = build_prompt(r["question"], lang, tokenizer)
+        generation = r.get("teacher_generation", "")
+        weight   = CORRECT_WEIGHT if r.get("correct", False) else INCORRECT_WEIGHT
+        return DistillRecord(
+            prompt=prompt,
+            generation=generation,
+            weight=weight,
+            gold_answer=str(r.get("gold_answer", r.get("answer", ""))).upper()[:1],
+            language=lang,
+        )
+
+    records = [to_record(r) for r in final_raw]
+
+    # Val split
+    split_idx     = max(1, int(len(records) * val_fraction))
+    val_records   = records[:split_idx]
+    train_records = records[split_idx:]
+
+    LOGGER.info("Train: %d | Val: %d", len(train_records), len(val_records))
     return train_records, val_records
-
 
 class DistillDataset(Dataset):
     def __init__(self, records: list[DistillRecord], tokenizer, max_length: int = 1536):

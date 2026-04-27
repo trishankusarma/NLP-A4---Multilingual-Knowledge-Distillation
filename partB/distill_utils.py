@@ -136,4 +136,4 @@ def run_val_accuracy(
     overall = sum(lang_correct.values()) / max(sum(lang_total.values()), 1)
     results["overall"] = overall
     LOGGER.info("  Val acc overall    : %.1f%%", overall * 100)
-    return results
+    return results, overall

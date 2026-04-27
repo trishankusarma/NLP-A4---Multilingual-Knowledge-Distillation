@@ -28,26 +28,28 @@ python dataset_generation.py \
     --batch_size 10000
 
 # In-family student (Qwen)
-# python train_distill.py \
-#     --student_model Qwen/Qwen2.5-1.5B-Instruct \
-#     --train_data outputs/train.jsonl \
-#     --output_dir outputs/qwen_distilled \
-#     --log_file_name qwen_distill \
-#     --epochs 10 \
-#     --early_stopping_patience 2 \
-#     --val_max_new_tokens 1024 \
-#     --batch_size 4 \
-#     --grad_accumulation_steps 2 \
-#     --val_acc_samples_per_lang 50
+python train_distill.py \
+    --student_model Qwen/Qwen2.5-1.5B-Instruct \
+    --train_data outputs/train.jsonl \
+    --output_dir outputs/qwen_distilled \
+    --log_file_name qwen_distill \
+    --epochs 3 \
+    --early_stopping_patience 2 \
+    --val_max_new_tokens 512 \
+    --batch_size 2 \
+    --grad_accumulation_steps 4 \
+    --val_acc_samples_per_lang 10 \
+    --max_length  1702
 
-# python train_distill.py \
-#     --student_model /scratch/scai/phd/aiz248311/col772/a4/models/Llama-3.2-1B-Instruct \
-#     --train_data outputs/train.jsonl \
-#     --output_dir outputs/llama_distilled \
-#     --log_file_name llama_distill \
-#     --epochs 10 \
-#     --early_stopping_patience 2 \
-#     --val_max_new_tokens 1024 \
-#     --batch_size 4 \
-#     --grad_accumulation_steps 2 \
-#     --val_acc_samples_per_lang 50
+python train_distill.py \
+    --student_model "meta-llama/Llama-3.2-1B-Instruct"\
+    --train_data outputs/train.jsonl \
+    --output_dir outputs/llama_distilled \
+    --log_file_name llama_distill \
+    --epochs 3 \
+    --early_stopping_patience 2 \
+    --val_max_new_tokens 512 \
+    --batch_size 2 \
+    --grad_accumulation_steps 4 \
+    --val_acc_samples_per_lang 10 \
+    --max_length  1702

@@ -1,68 +1,63 @@
-(base) [aiy257584@scai01 ~/scratch/Workspace/NLP-A4---Multilingual-Knowledge-Distillation]
-$ bash run_distillation.sh
-2026-04-19 13:58:43,845 | INFO | Logging to logs/output_qwen_distill.txt
-2026-04-19 13:58:43,846 | INFO | Loading student tokenizer from Qwen/Qwen2.5-1.5B-Instruct
-2026-04-19 13:58:46,235 | INFO | Loaded rows per language (before split):
-2026-04-19 13:58:46,235 | INFO |   bengali    : 748 rows
-2026-04-19 13:58:46,235 | INFO |   en         : 2079 rows
-2026-04-19 13:58:46,235 | INFO |   hindi      : 1002 rows
-2026-04-19 13:58:46,235 | INFO |   kannada    : 300 rows
-2026-04-19 13:58:46,235 | INFO |   tamil      : 315 rows
-2026-04-19 13:58:46,236 | INFO |   tamil      : 284 train | 31 val
-2026-04-19 13:58:46,315 | INFO |   hindi      : 902 train | 100 val
-2026-04-19 13:58:46,367 | INFO |   en         : 1872 train | 207 val
-2026-04-19 13:58:46,461 | INFO |   bengali    : 674 train | 74 val
-2026-04-19 13:58:46,495 | INFO |   kannada    : 270 train | 30 val
-2026-04-19 13:58:46,508 | INFO | Final: 4002 train | 442 val records
-2026-04-19 13:58:46,511 | INFO | Loading student model from Qwen/Qwen2.5-1.5B-Instruct
-`torch_dtype` is deprecated! Use `dtype` instead!
-trainable params: 18,464,768 || all params: 1,562,179,072 || trainable%: 1.1820
-2026-04-19 13:58:52,796 | INFO | Training: 10 epochs | 5000 steps | warmup 250
-Epoch 1/10: 100%|████████████████████████████████████████████████████████████████████████████████████| 1001/1001 [10:30<00:00,  1.59it/s, train_loss=0.6672, lr=1.99e-04]
-2026-04-19 14:09:23,130 | INFO | Epoch 1 | train loss: 0.6672
-2026-04-19 14:09:47,933 | INFO | Epoch 1 | val loss:   0.6510
-2026-04-19 14:09:47,933 | INFO | Epoch 1 | running val accuracy...
-Val accuracy:   0%|                                                                                                                               | 0/27 [00:00<?, ?it/s]The following generation flags are not valid and may be ignored: ['temperature', 'top_p', 'top_k']. Set `TRANSFORMERS_VERBOSITY=info` for more details.
-2026-04-19 14:36:27,385 | INFO |   Val acc bengali    : 22.0% (11/50)                                                                                                    
-2026-04-19 14:36:27,386 | INFO |   Val acc en         : 38.0% (19/50)
-2026-04-19 14:36:27,386 | INFO |   Val acc hindi      : 26.0% (13/50)
-2026-04-19 14:36:27,386 | INFO |   Val acc kannada    : 10.0% (3/30)
-2026-04-19 14:36:27,386 | INFO |   Val acc tamil      : 25.8% (8/31)
-2026-04-19 14:36:27,386 | INFO |   Val acc overall    : 25.6%
-2026-04-19 14:36:29,014 | INFO | Epoch 1 | saved best checkpoint (val_loss=0.6510)
-Epoch 2/10: 100%|████████████████████████████████████████████████████████████████████████████████████| 1001/1001 [10:14<00:00,  1.63it/s, train_loss=0.5513, lr=1.88e-04]
-2026-04-19 14:46:43,874 | INFO | Epoch 2 | train loss: 0.5513
-2026-04-19 14:47:08,725 | INFO | Epoch 2 | val loss:   0.6465
-2026-04-19 14:47:08,725 | INFO | Epoch 2 | running val accuracy...
-2026-04-19 15:14:25,782 | INFO |   Val acc bengali    : 18.0% (9/50)                                                                                                     
-2026-04-19 15:14:25,783 | INFO |   Val acc en         : 44.0% (22/50)
-2026-04-19 15:14:25,783 | INFO |   Val acc hindi      : 26.0% (13/50)
-2026-04-19 15:14:25,783 | INFO |   Val acc kannada    : 13.3% (4/30)
-2026-04-19 15:14:25,783 | INFO |   Val acc tamil      : 19.4% (6/31)
-2026-04-19 15:14:25,783 | INFO |   Val acc overall    : 25.6%
-2026-04-19 15:14:29,098 | INFO | Epoch 2 | saved best checkpoint (val_loss=0.6465)
-Epoch 3/10: 100%|████████████████████████████████████████████████████████████████████████████████████| 1001/1001 [10:22<00:00,  1.61it/s, train_loss=0.4091, lr=1.68e-04]
-2026-04-19 15:24:51,792 | INFO | Epoch 3 | train loss: 0.4091
-2026-04-19 15:25:16,530 | INFO | Epoch 3 | val loss:   0.6913
-2026-04-19 15:25:16,531 | INFO | Epoch 3 | running val accuracy...
-2026-04-19 15:50:55,021 | INFO |   Val acc bengali    : 28.0% (14/50)                                                                                                    
-2026-04-19 15:50:55,022 | INFO |   Val acc en         : 48.0% (24/50)
-2026-04-19 15:50:55,022 | INFO |   Val acc hindi      : 22.0% (11/50)
-2026-04-19 15:50:55,022 | INFO |   Val acc kannada    : 10.0% (3/30)
-2026-04-19 15:50:55,022 | INFO |   Val acc tamil      : 22.6% (7/31)
-2026-04-19 15:50:55,022 | INFO |   Val acc overall    : 28.0%
-2026-04-19 15:50:55,022 | INFO | Epoch 3 | no improvement for 1/2 epochs
-Epoch 4/10: 100%|████████████████████████████████████████████████████████████████████████████████████| 1001/1001 [10:14<00:00,  1.63it/s, train_loss=0.2759, lr=1.40e-04]
-2026-04-19 16:01:09,853 | INFO | Epoch 4 | train loss: 0.2759
-2026-04-19 16:01:34,591 | INFO | Epoch 4 | val loss:   0.7800
-2026-04-19 16:01:34,591 | INFO | Epoch 4 | running val accuracy...
-2026-04-19 16:27:11,538 | INFO |   Val acc bengali    : 30.0% (15/50)                                                                                                    
-2026-04-19 16:27:11,539 | INFO |   Val acc en         : 40.0% (20/50)
-2026-04-19 16:27:11,539 | INFO |   Val acc hindi      : 28.0% (14/50)
-2026-04-19 16:27:11,539 | INFO |   Val acc kannada    : 13.3% (4/30)
-2026-04-19 16:27:11,539 | INFO |   Val acc tamil      : 16.1% (5/31)
-2026-04-19 16:27:11,539 | INFO |   Val acc overall    : 27.5%
-2026-04-19 16:27:11,540 | INFO | Epoch 4 | no improvement for 2/2 epochs
-2026-04-19 16:27:11,540 | INFO | Early stopping triggered after epoch 4.
-2026-04-19 16:27:15,622 | INFO | Saved final checkpoint to outputs/qwen_distilled/final
-2026-04-19 16:27:15,624 | INFO | Best val loss: 0.6465
+2026-04-27 00:15:37,221 | INFO | Logging to logs/output_qwen_distill.txt
+2026-04-27 00:15:37,221 | INFO | Loading student tokenizer from Qwen/Qwen2.5-1.5B-Instruct
+2026-04-27 00:15:37,604 | INFO | HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 00:15:37,611 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-1.5B-Instruct/989aa7980e4cf806f80c7fef2b1adb7bc71aa306/config.json "HTTP/1.1 200 OK"
+2026-04-27 00:15:37,874 | INFO | HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 00:15:37,896 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-1.5B-Instruct/989aa7980e4cf806f80c7fef2b1adb7bc71aa306/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-04-27 00:15:38,162 | INFO | HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-1.5B-Instruct/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-04-27 00:15:38,427 | INFO | HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-1.5B-Instruct/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-04-27 00:15:39,067 | INFO | HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen2.5-1.5B-Instruct "HTTP/1.1 200 OK"
+2026-04-27 00:15:39,188 | INFO | Loaded: 3401 correct, 6599 incorrect
+2026-04-27 00:15:39,193 | INFO | Final: 3401 correct + 5 incorrect (0%) = 3406 total
+2026-04-27 00:15:39,196 | INFO |   bengali    : 587 correct + 1 incorrect
+2026-04-27 00:15:39,196 | INFO |   en         : 1655 correct + 1 incorrect
+2026-04-27 00:15:39,196 | INFO |   hindi      : 737 correct + 1 incorrect
+2026-04-27 00:15:39,196 | INFO |   kannada    : 202 correct + 1 incorrect
+2026-04-27 00:15:39,196 | INFO |   tamil      : 220 correct + 1 incorrect
+2026-04-27 00:15:39,272 | INFO | Train: 3066 | Val: 340
+2026-04-27 00:15:39,278 | INFO | Loading student model from Qwen/Qwen2.5-1.5B-Instruct
+2026-04-27 00:15:39,630 | INFO | HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 00:15:39,637 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-1.5B-Instruct/989aa7980e4cf806f80c7fef2b1adb7bc71aa306/config.json "HTTP/1.1 200 OK"
+2026-04-27 00:15:39,902 | INFO | HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 00:15:39,911 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-1.5B-Instruct/989aa7980e4cf806f80c7fef2b1adb7bc71aa306/config.json "HTTP/1.1 200 OK"
+2026-04-27 00:15:40,422 | INFO | HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct/resolve/main/generation_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 00:15:40,429 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-1.5B-Instruct/989aa7980e4cf806f80c7fef2b1adb7bc71aa306/generation_config.json "HTTP/1.1 200 OK"
+2026-04-27 00:15:40,698 | INFO | HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct/resolve/main/custom_generate/generate.py "HTTP/1.1 404 Not Found"
+2026-04-27 00:15:41,707 | INFO | Training: 10 epochs | 1910 steps | warmup 95
+2026-04-27 01:02:50,651 | INFO | Epoch 1 | train loss: 0.4100
+2026-04-27 01:05:18,416 | INFO | Epoch 1 | val loss:   0.3639
+2026-04-27 01:05:18,416 | INFO | Epoch 1 | running val accuracy...
+2026-04-27 01:36:03,372 | INFO |   Val acc bengali    : 42.0% (21/50)
+2026-04-27 01:36:03,372 | INFO |   Val acc en         : 46.0% (23/50)
+2026-04-27 01:36:03,372 | INFO |   Val acc hindi      : 22.0% (11/50)
+2026-04-27 01:36:03,372 | INFO |   Val acc kannada    : 0.0% (0/23)
+2026-04-27 01:36:03,372 | INFO |   Val acc tamil      : 24.0% (6/25)
+2026-04-27 01:36:03,372 | INFO |   Val acc overall    : 30.8%
+2026-04-27 01:36:03,768 | INFO | HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 01:36:03,806 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-1.5B-Instruct/989aa7980e4cf806f80c7fef2b1adb7bc71aa306/config.json "HTTP/1.1 200 OK"
+2026-04-27 01:36:04,112 | INFO | HTTP Request: HEAD https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-04-27 01:36:04,151 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen2.5-1.5B-Instruct/989aa7980e4cf806f80c7fef2b1adb7bc71aa306/config.json "HTTP/1.1 200 OK"
+2026-04-27 01:36:04,414 | INFO | Epoch 1 | saved best checkpoint (val_loss=0.3639)
+2026-04-27 02:22:03,379 | INFO | Epoch 2 | train loss: 0.3284
+2026-04-27 02:24:26,440 | INFO | Epoch 2 | val loss:   0.3648
+2026-04-27 02:24:26,440 | INFO | Epoch 2 | running val accuracy...
+2026-04-27 02:53:11,976 | INFO |   Val acc bengali    : 36.0% (18/50)
+2026-04-27 02:53:11,976 | INFO |   Val acc en         : 54.0% (27/50)
+2026-04-27 02:53:11,976 | INFO |   Val acc hindi      : 20.0% (10/50)
+2026-04-27 02:53:11,976 | INFO |   Val acc kannada    : 13.0% (3/23)
+2026-04-27 02:53:11,976 | INFO |   Val acc tamil      : 20.0% (5/25)
+2026-04-27 02:53:11,976 | INFO |   Val acc overall    : 31.8%
+2026-04-27 02:53:11,976 | INFO | Epoch 2 | no improvement for 1/2 epochs
+2026-04-27 03:35:54,974 | INFO | Epoch 3 | train loss: 0.2244
+2026-04-27 03:38:15,364 | INFO | Epoch 3 | val loss:   0.3965
+2026-04-27 03:38:15,364 | INFO | Epoch 3 | running val accuracy...
+2026-04-27 04:04:37,621 | INFO |   Val acc bengali    : 44.0% (22/50)
+2026-04-27 04:04:37,622 | INFO |   Val acc en         : 50.0% (25/50)
+2026-04-27 04:04:37,622 | INFO |   Val acc hindi      : 34.0% (17/50)
+2026-04-27 04:04:37,622 | INFO |   Val acc kannada    : 17.4% (4/23)
+2026-04-27 04:04:37,622 | INFO |   Val acc tamil      : 36.0% (9/25)
+2026-04-27 04:04:37,622 | INFO |   Val acc overall    : 38.9%
+2026-04-27 04:04:37,623 | INFO | Epoch 3 | no improvement for 2/2 epochs
+2026-04-27 04:04:37,623 | INFO | Early stopping triggered after epoch 3.
+2026-04-27 04:04:37,791 | INFO | Saved final checkpoint to outputs/qwen_distilled/final
+2026-04-27 04:04:37,792 | INFO | Best val loss: 0.3639

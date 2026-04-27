@@ -58,7 +58,9 @@ def train(args: argparse.Namespace) -> None:
     # ---- Model + LoRA ----
     LOGGER.info("Loading student model from %s", args.student_model)
     model = AutoModelForCausalLM.from_pretrained(
-        args.student_model, torch_dtype=torch.bfloat16, trust_remote_code=True,
+        args.student_model,
+        torch_dtype=torch.float16 if not torch.cuda.is_bf16_supported() else torch.bfloat16,
+        trust_remote_code=True,
     )
     lora_config = LoraConfig(
         task_type=TaskType.CAUSAL_LM,
@@ -87,7 +89,7 @@ def train(args: argparse.Namespace) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # ---- Early stopping state ----
-    best_val_loss     = float("inf")
+    best_val_acc     = 0
     epochs_no_improve = 0
 
     # Epoch loop
@@ -126,13 +128,9 @@ def train(args: argparse.Namespace) -> None:
         avg_train_loss = epoch_loss / len(train_loader)
         LOGGER.info("Epoch %d | train loss: %.4f", epoch, avg_train_loss)
 
-        # ---- Val loss ----
-        val_loss = run_val_loss(model, val_loader, device)
-        LOGGER.info("Epoch %d | val loss:   %.4f", epoch, val_loss)
-
         # ---- Val accuracy ----
         LOGGER.info("Epoch %d | running val accuracy...", epoch)
-        run_val_accuracy(
+        results, val_acc = run_val_accuracy(
             model, tokenizer, val_records, device,
             max_new_tokens=args.val_max_new_tokens,
             samples_per_lang=args.val_acc_samples_per_lang,
@@ -141,13 +139,13 @@ def train(args: argparse.Namespace) -> None:
         )
 
         # ---- Checkpoint + early stopping ----
-        if val_loss < best_val_loss:
-            best_val_loss     = val_loss
+        if val_acc >= best_val_acc:
+            best_val_acc     = val_acc
             epochs_no_improve = 0
             best_path         = output_dir / "best"
             model.save_pretrained(best_path)
             tokenizer.save_pretrained(best_path)
-            LOGGER.info("Epoch %d | saved best checkpoint (val_loss=%.4f)", epoch, val_loss)
+            LOGGER.info("Epoch %d | saved best checkpoint (val_acc=%.4f)", epoch, val_acc)
         else:
             epochs_no_improve += 1
             LOGGER.info(
@@ -165,7 +163,7 @@ def train(args: argparse.Namespace) -> None:
     model.save_pretrained(final_path)
     tokenizer.save_pretrained(final_path)
     LOGGER.info("Saved final checkpoint to %s", final_path)
-    LOGGER.info("Best val loss: %.4f", best_val_loss)
+    LOGGER.info("Best val acc: %.4f", best_val_acc)
 
 # Logger + args
 def setup_logger(level: str, log_file_name: str) -> None:

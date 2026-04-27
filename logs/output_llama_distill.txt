@@ -1,2 +1,56 @@
-2026-04-26 15:19:13,148 | INFO | Logging to logs/output_llama_distill.txt
-2026-04-26 15:19:13,148 | INFO | Loading student tokenizer from /scratch/scai/phd/aiz248311/col772/a4/models/Llama-3.2-1B-Instruct
+2026-04-27 10:48:20,526 | INFO | Logging to logs/output_llama_distill.txt
+2026-04-27 10:48:20,526 | INFO | Loading student tokenizer from meta-llama/Llama-3.2-1B-Instruct
+2026-04-27 10:48:21,004 | INFO | HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct/resolve/main/config.json "HTTP/1.1 200 OK"
+2026-04-27 10:48:21,308 | INFO | HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct/resolve/main/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-04-27 10:48:21,622 | INFO | HTTP Request: GET https://huggingface.co/api/models/meta-llama/Llama-3.2-1B-Instruct/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-04-27 10:48:21,924 | INFO | HTTP Request: GET https://huggingface.co/api/models/meta-llama/Llama-3.2-1B-Instruct/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-04-27 10:48:23,016 | INFO | HTTP Request: GET https://huggingface.co/api/models/meta-llama/Llama-3.2-1B-Instruct "HTTP/1.1 200 OK"
+2026-04-27 10:48:23,079 | INFO | Set pad_token = eos_token (<|eot_id|>)
+2026-04-27 10:48:23,243 | INFO | Loaded: 3401 correct, 6599 incorrect
+2026-04-27 10:48:23,247 | INFO | Final: 3401 correct + 5 incorrect (0%) = 3406 total
+2026-04-27 10:48:23,249 | INFO |   bengali    : 587 correct + 1 incorrect
+2026-04-27 10:48:23,249 | INFO |   en         : 1655 correct + 1 incorrect
+2026-04-27 10:48:23,249 | INFO |   hindi      : 737 correct + 1 incorrect
+2026-04-27 10:48:23,250 | INFO |   kannada    : 202 correct + 1 incorrect
+2026-04-27 10:48:23,250 | INFO |   tamil      : 220 correct + 1 incorrect
+2026-04-27 10:48:23,332 | INFO | Train: 3066 | Val: 340
+2026-04-27 10:48:23,336 | INFO | Loading student model from meta-llama/Llama-3.2-1B-Instruct
+2026-04-27 10:48:23,739 | INFO | HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct/resolve/main/config.json "HTTP/1.1 200 OK"
+2026-04-27 10:48:24,039 | INFO | HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct/resolve/main/config.json "HTTP/1.1 200 OK"
+2026-04-27 10:48:24,456 | INFO | HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct/resolve/main/generation_config.json "HTTP/1.1 200 OK"
+2026-04-27 10:48:24,757 | INFO | HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct/resolve/main/custom_generate/generate.py "HTTP/1.1 404 Not Found"
+2026-04-27 10:48:25,533 | INFO | Training: 10 epochs | 3830 steps | warmup 191
+2026-04-27 11:21:21,455 | INFO | Epoch 1 | train loss: 0.5180
+2026-04-27 11:23:09,908 | INFO | Epoch 1 | val loss:   0.4598
+2026-04-27 11:23:09,909 | INFO | Epoch 1 | running val accuracy...
+2026-04-27 11:48:48,101 | INFO |   Val acc bengali    : 32.0% (16/50)
+2026-04-27 11:48:48,101 | INFO |   Val acc en         : 36.0% (18/50)
+2026-04-27 11:48:48,101 | INFO |   Val acc hindi      : 22.0% (11/50)
+2026-04-27 11:48:48,101 | INFO |   Val acc kannada    : 26.1% (6/23)
+2026-04-27 11:48:48,101 | INFO |   Val acc tamil      : 36.0% (9/25)
+2026-04-27 11:48:48,101 | INFO |   Val acc overall    : 30.3%
+2026-04-27 11:48:49,002 | INFO | HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct/resolve/main/config.json "HTTP/1.1 200 OK"
+2026-04-27 11:48:49,400 | INFO | HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct/resolve/main/config.json "HTTP/1.1 200 OK"
+2026-04-27 11:48:49,675 | INFO | Epoch 1 | saved best checkpoint (val_loss=0.4598)
+2026-04-27 12:20:04,695 | INFO | Epoch 2 | train loss: 0.3915
+2026-04-27 12:21:53,294 | INFO | Epoch 2 | val loss:   0.4583
+2026-04-27 12:21:53,294 | INFO | Epoch 2 | running val accuracy...
+2026-04-27 12:48:09,561 | INFO |   Val acc bengali    : 30.0% (15/50)
+2026-04-27 12:48:09,561 | INFO |   Val acc en         : 38.0% (19/50)
+2026-04-27 12:48:09,561 | INFO |   Val acc hindi      : 28.0% (14/50)
+2026-04-27 12:48:09,562 | INFO |   Val acc kannada    : 8.7% (2/23)
+2026-04-27 12:48:09,562 | INFO |   Val acc tamil      : 16.0% (4/25)
+2026-04-27 12:48:09,562 | INFO |   Val acc overall    : 27.3%
+2026-04-27 12:48:10,076 | INFO | HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct/resolve/main/config.json "HTTP/1.1 200 OK"
+2026-04-27 12:48:10,393 | INFO | HTTP Request: HEAD https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct/resolve/main/config.json "HTTP/1.1 200 OK"
+2026-04-27 12:48:11,434 | INFO | Epoch 2 | saved best checkpoint (val_loss=0.4583)
+2026-04-27 13:23:25,239 | INFO | Epoch 3 | train loss: 0.2435
+2026-04-27 13:25:24,912 | INFO | Epoch 3 | val loss:   0.5064
+2026-04-27 13:25:24,912 | INFO | Epoch 3 | running val accuracy...
+2026-04-27 13:51:59,059 | INFO |   Val acc bengali    : 18.0% (9/50)
+2026-04-27 13:51:59,059 | INFO |   Val acc en         : 30.0% (15/50)
+2026-04-27 13:51:59,059 | INFO |   Val acc hindi      : 22.0% (11/50)
+2026-04-27 13:51:59,059 | INFO |   Val acc kannada    : 13.0% (3/23)
+2026-04-27 13:51:59,059 | INFO |   Val acc tamil      : 32.0% (8/25)
+2026-04-27 13:51:59,059 | INFO |   Val acc overall    : 23.2%
+2026-04-27 13:51:59,059 | INFO | Epoch 3 | no improvement for 1/2 epochs

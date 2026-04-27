@@ -1,0 +1,11 @@
+FROM THE 7-B TEACHER MODEL :
+
+Language | Total | Correct | Accuracy
+---------------------------------------------
+bengali    |  2000 |     587 | 29.4%
+en         |  3500 |    1655 | 47.3%
+hindi      |  2500 |     737 | 29.5%
+kannada    |  1000 |     202 | 20.2%
+tamil      |  1000 |     220 | 22.0%
+TOTAL      | 10000 |    3401 | 34.0%
+
