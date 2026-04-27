@@ -15,17 +15,8 @@ from utils import load_vllm_llm, prompt_vllm
 
 LOGGER = logging.getLogger(__name__)
 
-ANSWER_TAG_RE = re.compile(r"####\s*ANSWER\s*:\s*([A-J])", re.IGNORECASE)
+ANSWER_TAG_RE = re.compile(r"####\s*ANSWER\s*:\s*\(?([A-J])\)?", re.IGNORECASE)
 LAST_LINE_LETTER_RE = re.compile(r"\b([A-J])\b", re.IGNORECASE)
-
-LANGUAGES = ["english", "hindi", "bengali", "kannada", "tamil"]
-LANGUAGE_LABELS = {
-    "english": "ENGLISH",
-    "hindi":   "HINDI",
-    "bengali": "BENGALI",
-    "kannada": "KANNADA",
-    "tamil":   "TAMIL",
-}
 
 LANGUAGE_INSTRUCTIONS = {
     "en":      "Reason step by step in English and respond",
@@ -35,7 +26,9 @@ LANGUAGE_INSTRUCTIONS = {
     "tamil":   "Reason step by step in English and respond",
 }
 
-# Helpers
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
 def setup_logger(level: str) -> None:
     numeric_level = getattr(logging, level.upper(), logging.INFO)
     logging.basicConfig(
@@ -64,47 +57,49 @@ def _options_to_text(options: list[str]) -> str:
 
 
 def _build_instruction(row: dict) -> str:
-    options = row.get("options", [])
+    """Build question + options text. Handles rows with or without options field."""
+    question = row.get("question", "")
+    options  = row.get("options", [])
     if not isinstance(options, list):
         options = list(options)
-    return f"{row['question']}\n\n{_options_to_text(options)}"
+    if options:
+        return f"{question}\n\n{_options_to_text(options)}"
+    # If no options field (e.g. already-formatted question), return as-is
+    return question
 
 
-def build_prompt(instruction: str, language: str, tokenizer) -> str:
-    lang_instruction = LANGUAGE_INSTRUCTIONS.get(language, "Reason step by step in English and respond")
+def build_prompt(instruction: str, language: str, tokenizer) -> list[dict]:
+    """Return messages list — prompt_vllm handles apply_chat_template."""
+    lang_instruction = LANGUAGE_INSTRUCTIONS.get(
+        language, "Reason step by step in English and respond"
+    )
     system_content = (
         "You are an expert reasoning assistant. "
-        f"{lang_instruction} "
+        f"{lang_instruction}. "
         "Think step by step. "
         "Wrap ALL of your reasoning inside <reasoning>...</reasoning> tags. "
         "After the closing tag, end your response with exactly: #### ANSWER: [LETTER] "
         "where [LETTER] is one of A-J. Do not add anything after the answer line."
     )
-    messages = [
+    return [
         {"role": "system", "content": system_content},
         {"role": "user",   "content": instruction},
     ]
-    if hasattr(tokenizer, "apply_chat_template"):
-        return tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True,
-        )
-    return f"System: {system_content}\nUser: {instruction}\nAssistant:"
 
 
 def parse_answer(raw: str, n_options: int) -> str:
-    valid_letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[:n_options]
+    valid = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[:max(n_options, 10)]
 
-    # Primary: #### ANSWER: X
+    # Primary: #### ANSWER: (X) or #### ANSWER: X
     match = ANSWER_TAG_RE.search(raw)
     if match:
         letter = match.group(1).upper()
-        if letter in valid_letters:
+        if letter in valid:
             return letter
 
     # Fallback: last standalone A-J letter in valid range
-    all_letters = LAST_LINE_LETTER_RE.findall(raw)
-    for letter in reversed(all_letters):
-        if letter.upper() in valid_letters:
+    for letter in reversed(LAST_LINE_LETTER_RE.findall(raw)):
+        if letter.upper() in valid:
             return letter.upper()
 
     return ""
@@ -122,11 +117,13 @@ def load_test_data(test_data: str) -> list[dict]:
 
 
 def merge_adapter(base_model: str, adapter_path: str, tmp_dir: str, dtype: str) -> str:
-    """Merge LoRA adapter into base model and save for vLLM loading."""
-    LOGGER.info("Merging LoRA adapter from %s into %s ...", adapter_path, base_model)
-    torch_dtype = torch.float16 if dtype == "float16" else \
-                  torch.bfloat16 if dtype == "bfloat16" else torch.float32
-
+    """Merge LoRA adapter into base model weights and save for vLLM loading."""
+    LOGGER.info("Merging LoRA adapter %s into %s ...", adapter_path, base_model)
+    torch_dtype = (
+        torch.float16  if dtype == "float16"  else
+        torch.bfloat16 if dtype == "bfloat16" else
+        torch.float32
+    )
     tokenizer = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
     model = AutoModelForCausalLM.from_pretrained(
         base_model, torch_dtype=torch_dtype, trust_remote_code=True,
@@ -140,31 +137,34 @@ def merge_adapter(base_model: str, adapter_path: str, tmp_dir: str, dtype: str) 
     LOGGER.info("Merged model saved to %s", tmp_dir)
     return tmp_dir
 
-# Args
+
+# ── Args ──────────────────────────────────────────────────────────────────────
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run inference + eval on test JSONL")
-    parser.add_argument("--base_model", required=True,
+    parser.add_argument("--base_model",          required=True,
                         help="Base student model path or HuggingFace ID")
-    parser.add_argument("--adapter_path", default="",
+    parser.add_argument("--adapter_path",        default="",
                         help="Optional LoRA adapter path (output_dir/best or final)")
-    parser.add_argument("--test_data", required=True,
+    parser.add_argument("--test_data",           required=True,
                         help="Test JSONL path")
-    parser.add_argument("--output_predictions", required=True,
+    parser.add_argument("--output_predictions",  required=True,
                         help="Predictions JSONL output path")
-    parser.add_argument("--report_file", required=True,
+    parser.add_argument("--report_file",         required=True,
                         help="Metrics report text file path")
-    parser.add_argument("--max_new_tokens", type=int, default=1024)
+    parser.add_argument("--max_new_tokens",      type=int,   default=512)
     parser.add_argument("--gpu_memory_utilization", type=float, default=0.85)
-    parser.add_argument("--tensor_parallel_size", type=int, default=1)
-    parser.add_argument("--dtype", type=str, default="float16",
-                        help="Model dtype — float16 for V100, bfloat16 for A100")
-    parser.add_argument("--max_model_len", type=int, default=4096,
-                        help="Max sequence length for vLLM")
-    parser.add_argument("--log_level", default="INFO",
+    parser.add_argument("--tensor_parallel_size",   type=int,   default=1)
+    parser.add_argument("--dtype",               type=str,   default="float16",
+                        help="Model dtype: float16 for V100, bfloat16 for A100")
+    parser.add_argument("--max_model_len",       type=int,   default=8192)
+    parser.add_argument("--log_level",           default="INFO",
                         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
     return parser.parse_args()
 
-# Main
+
+# ── Main ──────────────────────────────────────────────────────────────────────
+
 def main() -> None:
     args = parse_args()
     setup_logger(args.log_level)
@@ -177,7 +177,7 @@ def main() -> None:
         )
     else:
         model_path = args.base_model
-        LOGGER.info("No adapter path provided — running base model directly")
+        LOGGER.info("No adapter path — running base model directly")
 
     llm, tokenizer = load_vllm_llm(
         model_id=model_path,
@@ -188,10 +188,14 @@ def main() -> None:
     )
 
     # 2. Load test data and build prompts
-    rows        = load_test_data(args.test_data)
+    rows      = load_test_data(args.test_data)
+    languages = [_canonical_language(r.get("language", "en")) for r in rows]
+
+    # Build instruction text per row
     instructions = [_build_instruction(r) for r in rows]
-    languages    = [_canonical_language(r.get("language", "en")) for r in rows]
-    prompts      = [
+
+    # Build messages lists (prompt_vllm calls apply_chat_template internally)
+    prompts = [
         build_prompt(inst, lang, tokenizer)
         for inst, lang in zip(instructions, languages)
     ]
@@ -204,21 +208,20 @@ def main() -> None:
         prompts,
         max_new_tokens=args.max_new_tokens,
         temperature=0.0,
-        repetition_penalty=1.1,
         use_tqdm=True,
     )
 
-    # 4. Parse answers
+    # 4. Parse answers and build prediction records
     predictions = []
-    for row, instruction, lang, generation in zip(rows, instructions, languages, generations):
-        gold      = str(row.get("answer", "")).upper()[:1]
-        n_options = len(row.get("options", []))
+    for row, inst, lang, generation in zip(rows, instructions, languages, generations):
+        gold      = str(row.get("gold_answer", row.get("answer", ""))).upper()[:1]
+        n_options = len(row.get("options", [])) or 10  # default 10 for MMLU-Pro
         predicted = parse_answer(generation, n_options)
 
         predictions.append({
             "language":         lang,
             "subject":          row.get("subject", ""),
-            "question":         row.get("question", instruction),
+            "question":         row.get("question", ""),   # raw question text only
             "gold_answer":      gold,
             "predicted_answer": predicted,
             "generation":       generation,
@@ -230,9 +233,9 @@ def main() -> None:
     with pred_path.open("w", encoding="utf-8") as fp:
         for pred in predictions:
             fp.write(json.dumps(pred, ensure_ascii=False) + "\n")
-    LOGGER.info("Saved predictions to %s", pred_path)
+    LOGGER.info("Saved %d predictions to %s", len(predictions), pred_path)
 
-    # 6. Compute accuracy per language + overall 
+    # 6. Compute per-language + overall accuracy
     lang_correct: dict[str, int] = defaultdict(int)
     lang_total:   dict[str, int] = defaultdict(int)
 
@@ -245,12 +248,10 @@ def main() -> None:
     overall_total   = sum(lang_total.values())
 
     # 7. Write metrics report
+    # Format required: "<LANGUAGE> ACCURACY: xx.xx"
     report_path = Path(args.report_file)
     report_path.parent.mkdir(parents=True, exist_ok=True)
 
-    lines = []
-
-    # Map canonical codes back to display names
     display_map = {
         "en":      "ENGLISH",
         "hindi":   "HINDI",
@@ -259,6 +260,7 @@ def main() -> None:
         "tamil":   "TAMIL",
     }
 
+    lines = []
     for lang_code, display in display_map.items():
         if lang_total[lang_code] == 0:
             continue
